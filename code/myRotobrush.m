@@ -5,9 +5,9 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 60;  
+WindowWidth = 10;  
 ProbMaskThreshold = -1; 
-NumWindows= 80; 
+NumWindows= 40; 
 BoundaryWidth = 5;
 
 % Load images:
@@ -29,8 +29,12 @@ for i=1:length(files)
 end
 
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
-mask = roipoly(images{1});
-
+% mask = roipoly(images{1});
+% save('mask.mat', 'mask');
+mask = load('mask.mat');
+mask = mask.mask;
+% size(mask)
+% size(images{1})
 imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
