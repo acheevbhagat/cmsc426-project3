@@ -5,10 +5,10 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = -1;  
+WindowWidth = 60;  
 ProbMaskThreshold = -1; 
-NumWindows= -1; 
-BoundaryWidth = -1;
+NumWindows= 35; 
+BoundaryWidth = 5;
 
 % Load images:
 fpath = '../input';
@@ -27,7 +27,6 @@ imageNames = strcat(imageNames, '.jpg');
 for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
-
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
 mask = roipoly(images{1});
 
