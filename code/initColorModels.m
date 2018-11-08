@@ -3,7 +3,11 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     %
     % Must define a field ColorModels.Confidences: a cell array of the color confidence map for each local window.
     
+    window_centers = {};
     confidences = {};
+    distances = {};
+    fore_probs = {};
+    
     if mod(WindowWidth, 2) == 0
          half_wwidth = WindowWidth / 2;
     else
@@ -26,7 +30,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         % Row and columns displacement required for center of window due to
         % padding
         center = [window_center(2) + row_disp window_center(1) + col_disp];
-        
+        window_centers = {window_centers center};
         % Create window
         window = IMG_Lab(center(1) - half_wwidth:center(1) + half_wwidth, ...
             center(2) - half_wwidth:center(2) + half_wwidth, :);
@@ -49,12 +53,12 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         for row = 1:size(window, 1)
             for col = 1:size(window, 2)
                 if window_mask(row, col) == 0 && ...
-                        pix_dists_to_boundary_mask(row, col) > 5
+                        pix_dists_to_boundary_mask(row, col) > BoundaryWidth
                     %B_mask(row, col) = 1;
                     B_Lab_vals = [B_Lab_vals; window(row, col, 1) window(row, col, 2) window(row, col, 3)];
                 end
                 if window_mask(row, col) == 1 && ...
-                        pix_dists_to_boundary_mask(row, col) > 5
+                        pix_dists_to_boundary_mask(row, col) > BoundaryWidth
                     %F_mask(row, col) = 1;
                     F_Lab_vals = [F_Lab_vals; window(row, col, 1) window(row, col, 2) window(row, col, 3)];
                 end
@@ -94,12 +98,11 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         
         color_model_confidence = 1 - (confidence_numer / confidence_denom)
         confidences = {confidences color_model_confidence};
+        distances = {distances pix_dists_to_boundary_mask}
+        fore_probs = {fore_probs F_probs}
     end
-    ColorModels = struct('Confidences', confidences);
-end
-
-function likelihood = get_likelihood(pix, mu, covar)
-    likelihood = exp(-.5*(pix-mu)'*(covar\(pix-mu))) / sqrt((2*pi)^3 * det(covar));
+    ColorModels = struct('WindowCenters', window_centers, 'Confidences', confidences, ...
+        'Distances', distances ,'ForegroundProbs', fore_probs);
 end
 
 % Get probability of pixel being in foreground
@@ -108,4 +111,3 @@ function p_c = get_fore_prob(F_gmm, B_gmm, data)
     B_likelihood = pdf(B_gmm, data);
     p_c = F_likelihood / (F_likelihood + B_likelihood);
 end
-
