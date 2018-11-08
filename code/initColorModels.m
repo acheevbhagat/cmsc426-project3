@@ -3,7 +3,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     %
     % Must define a field ColorModels.Confidences: a cell array of the color confidence map for each local window.
     
-    ColorModels.Confidences = {}; % Not used yet
+    confidences = {}; % Not used yet
     if mod(WindowWidth, 2) == 0
          half_wwidth = WindowWidth / 2;
     else
@@ -14,6 +14,8 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     IMG = padarray(IMG, [half_wwidth half_wwidth], 0, 'both');
     Mask = padarray(Mask, [half_wwidth half_wwidth], 0, 'both');
     MaskOutline = padarray(MaskOutline, [half_wwidth half_wwidth], 0, 'both');
+    pix_dists_to_boundary = bwdist(MaskOutline);
+    
     row_disp = half_wwidth;
     col_disp = half_wwidth;
 
@@ -41,8 +43,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         B_Lab_vals = [];
         F_Lab_vals = [];
         
-        % Retrieve background color data at least 5 pixels away from boundary
-        pix_dists_to_boundary = bwdist(MaskOutline);
+        % Retrieve background and foreground color data at least 5 pixels away from boundary
         pix_dists_to_boundary_mask = pix_dists_to_boundary(center(1) - half_wwidth:center(1) + half_wwidth, ...
             center(2) - half_wwidth:center(2) + half_wwidth, :);
         for row = 1:size(window, 1)
@@ -52,12 +53,6 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
                     %B_mask(row, col) = 1;
                     B_Lab_vals = [B_Lab_vals; window(row, col, 1) window(row, col, 2) window(row, col, 3)];
                 end
-            end
-        end
-        
-        % Retrieve foreground data at least 5 pixels away from boundary
-        for row = 1:size(window, 1)
-            for col = 1:size(window, 2)
                 if window_mask(row, col) == 1 && ...
                         pix_dists_to_boundary_mask(row, col) > 5
                     %F_mask(row, col) = 1;
@@ -65,7 +60,6 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
                 end
             end
         end
-        F_Lab_vals
         
 %         size(window)
 %         window_L = double(window(:, :, 1));
@@ -77,24 +71,30 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
 %         B_Lab_vals = [(window_L .* B_mask) (window_a .* B_mask) (window_b .* B_mask)];
         
         % Fit GMM models
-        F_gmm = fitgmdist(F_Lab_vals, 3);
-        B_gmm = fitgmdist(B_Lab_vals, 3);
+        options = statset('MaxIter', 500);
+        F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        
         
         % Part 3.3 of project notes
+        window_Lab_vals = reshape(window, [size(window,1)^2 3]);
+        F_probs = get_fore_prob(F_gmm, B_gmm, window_Lab_vals);
         confidence_numer = 0;
         confidence_denom = 0;
         for row = 1:size(window, 1)
             for col = 1:size(window, 2)
-                weight = exp(-pix_dists_to_boundary(row, col)^2 / (WindowWidth / 2)^2);
+                weight = exp(-pix_dists_to_boundary_mask(row, col)^2 / (WindowWidth / 2)^2);
                 pix = [window(row, col, 1); window(row, col, 2); window(row, col, 3)];
-                p_c = get_fore_prob(pix, F_gmm, B_gmm);
-                confidence_numer = confidence_numer + abs(Mask(row, col) - p_c) * weight;
+                p_c = F_probs(row, col);
+                confidence_numer = confidence_numer + abs(window_mask(row, col) - p_c) * weight;
                 confidence_denom = confidence_denom + weight;
             end
         end
         
-        color_model_confidence = 1 - (confidence_numer / confidence_denom);
+        color_model_confidence = 1 - (confidence_numer / confidence_denom)
+        confidences = {confidences color_model_confidence};
     end
+    ColorModels = struct('Confidences', confidences);
 end
 
 function likelihood = get_likelihood(pix, mu, covar)
@@ -102,9 +102,9 @@ function likelihood = get_likelihood(pix, mu, covar)
 end
 
 % Get probability of pixel being in foreground
-function p_c = get_fore_prob(pix, F_gmm, B_gmm)
-    F_likelihood = get_likelihood(pix, F_gmm.mu, F_gmm.Sigma);
-    B_likelihood = get_likelihood(pix, B_gmm.mu, B_gmm.Sigma);
+function p_c = get_fore_prob(F_gmm, B_gmm, data)
+    F_likelihood = pdf(F_gmm, data);
+    B_likelihood = pdf(B_gmm, data);
     p_c = F_likelihood / (F_likelihood + B_likelihood);
 end
 

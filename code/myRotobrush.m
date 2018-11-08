@@ -5,9 +5,9 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 80;  
+WindowWidth = 60;  
 ProbMaskThreshold = -1; 
-NumWindows= 40; 
+NumWindows= 35; 
 BoundaryWidth = 5;
 
 % Load images:
