@@ -5,11 +5,7 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-<<<<<<< HEAD
 WindowWidth = 60;  
-=======
-WindowWidth = 80;  
->>>>>>> f6d727e38df587347ad9eda69ce9a11dc46b3a94
 ProbMaskThreshold = -1; 
 NumWindows= 35; 
 BoundaryWidth = 5;
@@ -32,13 +28,9 @@ for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
-% mask = roipoly(images{1});
-% save('mask.mat', 'mask');
-mask = load('mask.mat');
-mask = mask.mask;
-% size(mask)
-% size(images{1})
-imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
+mask = roipoly(images{1});
+
+imshow(imoverlay(images{1}, boundarymask(mask,8),'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
@@ -81,8 +73,7 @@ for prev=1:(length(files)-1)
     fprintf('Current frame: %i\n', curr)
     
     %%% Global affine transform between previous and current frames:
-    [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = ...
-        calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
+    [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
