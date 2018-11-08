@@ -104,4 +104,3 @@ function p_c = get_fore_prob(F_gmm, B_gmm, data)
     B_likelihood = pdf(B_gmm, data);
     p_c = F_likelihood / (F_likelihood + B_likelihood);
 end
-
