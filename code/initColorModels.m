@@ -3,7 +3,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     %
     % Must define a field ColorModels.Confidences: a cell array of the color confidence map for each local window.
     
-    confidences = {}; % Not used yet
+    confidences = {};
     if mod(WindowWidth, 2) == 0
          half_wwidth = WindowWidth / 2;
     else
@@ -60,6 +60,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
                 end
             end
         end
+        F_Lab_vals
         
 %         size(window)
 %         window_L = double(window(:, :, 1));
