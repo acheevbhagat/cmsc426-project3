@@ -98,14 +98,9 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     ColorModels = struct('Confidences', confidences);
 end
 
-function likelihood = get_likelihood(pix, mu, covar)
-    likelihood = exp(-.5*(pix-mu)'*(covar\(pix-mu))) / sqrt((2*pi)^3 * det(covar));
-end
-
 % Get probability of pixel being in foreground
 function p_c = get_fore_prob(F_gmm, B_gmm, data)
     F_likelihood = pdf(F_gmm, data);
     B_likelihood = pdf(B_gmm, data);
     p_c = F_likelihood / (F_likelihood + B_likelihood);
 end
-
