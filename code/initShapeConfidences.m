@@ -20,7 +20,7 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
         % Calculate shape confidence value
         fs = 1 - exp((-(dx.^2)) / (sigma.^2));
         % Append to confidence vector
-        confidences = {confidences fs} 
+        confidences = {confidences fs};
     end
     ShapeConfidences = struct('Confidences', confidences);
 end
