@@ -12,15 +12,21 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
         fc = cConf(idx);
         dx = cDist(idx);
         sigma = SigmaMin;
-        % Adapt sigma value based on fc
-        if fc > cutoff 
-            addVal = A * (fc - fcutoff).^(R);
-            sigma = sigma + addVal;
+        mask = zeros(WindowWidth, WindowWidth);
+        for i = 1:WindowWidth
+            for j = 1:WindowWidth
+                dxVal = dx(i, j);
+                if fc > fcutoff 
+                    addVal = A * (fc - fcutoff).^(R);
+                    sigma = sigma + addVal;
+                end
+                % Calculate shape confidence value
+                fs = 1 - exp((-(dx.^2)) / (sigma.^2));
+                % Append to mask
+                mask(i, j) = fs;
+            end
         end
-        % Calculate shape confidence value
-        fs = 1 - exp((-(dx.^2)) / (sigma.^2));
-        % Append to confidence vector
-        confidences = {confidences fs};
+        confidences = {confidences mask};
     end
     ShapeConfidences = struct('Confidences', confidences);
 end
