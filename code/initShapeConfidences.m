@@ -2,31 +2,34 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
 % INITSHAPECONFIDENCES Initialize shape confidences.  ShapeConfidences is a struct you should define yourself.
     % Initalize setup values
     confidences = {};
-    cConf = ColorConfidences.Confidences;
-    cDist = ColorConfidences.Distance;
-    cCenter = ColorConfidences.LocalWindowCenter;
+    c_conf = ColorConfidences.Confidences;
+    c_dist = ColorConfidences.Distances;
+    %c_center = ColorConfidences.LocalWindowCenter;
+    
     for window = 1:(length(LocalWindows))
         % Find index wihtin color confidences of the current window
-        idx = find(cCenter==window);
+        idx = window;
         % Use index to set up initial values
-        fc = cConf(idx);
-        dx = cDist(idx);
+        f_c = c_conf{idx};
+        dists = c_dist{idx};
         sigma = SigmaMin;
-        mask = zeros(WindowWidth, WindowWidth);
-        for i = 1:WindowWidth
-            for j = 1:WindowWidth
-                dxVal = dx(i, j);
-                if fc > fcutoff 
-                    addVal = A * (fc - fcutoff).^(R);
-                    sigma = sigma + addVal;
-                end
-                % Calculate shape confidence value
-                fs = 1 - exp((-(dx.^2)) / (sigma.^2));
-                % Append to mask
-                mask(i, j) = fs;
-            end
+        if f_c > fcutoff 
+            addVal = A * (f_c - fcutoff)^R;
+            sigma = sigma + addVal;
         end
-        confidences = {confidences mask};
+%         
+%         mask = zeros([WindowWidth WindowWidth]);
+%         for i = 1:WindowWidth + 1
+%             for j = 1:WindowWidth + 1
+%                 dist_x = dists(i, j);
+                
+        % Calculate shape confidence value
+        f_s = 1 - exp(-(dists.^2) ./ (sigma.^2))
+        % Append to mask
+%             end
+%         end
+        confidences{window} = f_s;
     end
+    imshow(confidences{10});
     ShapeConfidences = struct('Confidences', confidences);
 end

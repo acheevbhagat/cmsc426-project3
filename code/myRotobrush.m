@@ -28,9 +28,11 @@ for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
-mask = roipoly(images{1});
-
-imshow(imoverlay(images{1}, boundarymask(mask,8),'red'));
+% mask = roipoly(images{1});
+% save('mask.mat', 'mask');
+mask = load('mask.mat');
+mask = mask.mask;
+imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
@@ -46,11 +48,11 @@ ColorModels = ...
     initColorModels(images{1},mask,mask_outline,LocalWindows,BoundaryWidth,WindowWidth);
 
 % You should set these parameters yourself:
-fcutoff = -1;
-SigmaMin = -1;
-SigmaMax = -1;
-R = -1;
-A = -1;
+fcutoff = 0.85;
+SigmaMin = 2;
+SigmaMax = WindowWidth + 1;
+R = 2;
+A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
 ShapeConfidences = ...
     initShapeConfidences(LocalWindows,ColorModels,...
     WindowWidth, SigmaMin, A, fcutoff, R);
@@ -73,7 +75,8 @@ for prev=1:(length(files)-1)
     fprintf('Current frame: %i\n', curr)
     
     %%% Global affine transform between previous and current frames:
-    [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
+    [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = ...
+        calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
