@@ -48,11 +48,11 @@ ColorModels = ...
     initColorModels(images{1},mask,mask_outline,LocalWindows,BoundaryWidth,WindowWidth);
 
 % You should set these parameters yourself:
-fcutoff = -1;
-SigmaMin = -1;
-SigmaMax = -1;
-R = -1;
-A = -1;
+fcutoff = 0.85;
+SigmaMin = 2;
+SigmaMax = WindowWidth + 1;
+R = 2;
+A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
 ShapeConfidences = ...
     initShapeConfidences(LocalWindows,ColorModels,...
     WindowWidth, SigmaMin, A, fcutoff, R);

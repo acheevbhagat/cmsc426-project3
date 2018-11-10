@@ -7,11 +7,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     distances = cell(1, size(LocalWindows, 1));
     foreground_probs = cell(1, size(LocalWindows, 1));
     
-    if mod(WindowWidth, 2) == 0
-         half_wwidth = WindowWidth / 2;
-    else
-         half_wwidth = (WindowWidth - 1) / 2;
-    end
+    half_wwidth = floor(WindowWidth / 2);
     
     % Pad everything to avoid index out of bounds
     IMG = padarray(IMG, [half_wwidth half_wwidth], 0, 'both');
@@ -59,7 +55,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         end
         
         % Fit GMM models
-        options = statset('MaxIter', 500);
+        options = statset('MaxIter', 700);
         F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
         B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
         
@@ -67,7 +63,6 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         % Part 3.3 of project notes
         window_Lab_vals = reshape(window, [size(window, 1)^2 3]);
         F_probs = get_fore_prob(F_gmm, B_gmm, window_Lab_vals, size(window, 1));
-        imshow(F_probs);
         confidence_numer = 0;
         confidence_denom = 0;
         for row = 1:size(window, 1)
@@ -81,12 +76,13 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         
         color_model_confidence = 1 - (confidence_numer / confidence_denom);
         confidences{window_count} = color_model_confidence;
-        distances{window_count} = pix_dists_to_boundary_mask;
+        distances{window_count} = double(pix_dists_to_boundary_mask);
         foreground_probs{window_count} = F_probs;
+        window_count = window_count + 1;
     end
     
-    ColorModels = struct('Confidences', confidences, 'Distances', distances, ...
-        'ForegroundProbs', foreground_probs);
+    ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
+        'ForegroundProbs', {foreground_probs});
 end
 
 % Get probabilities of pixels being in the foreground
