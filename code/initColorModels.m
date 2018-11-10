@@ -7,12 +7,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     distances = cell(1, size(LocalWindows, 1));
     foreground_probs = cell(1, size(LocalWindows, 1));
     
-    if mod(WindowWidth, 2) == 0
-         half_wwidth = WindowWidth / 2;
-    else
-         half_wwidth = (WindowWidth - 1) / 2;
-    end
-    
+    half_wwidth = floor(WindowWidth / 2);
     % Pad everything to avoid index out of bounds
     IMG = padarray(IMG, [half_wwidth half_wwidth], 0, 'both');
     Mask = padarray(Mask, [half_wwidth half_wwidth], 0, 'both');
@@ -23,13 +18,12 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     col_disp = half_wwidth;
 
     IMG_Lab = rgb2lab(IMG);
-    
     % Loop through all windows along boundary
     window_count = 1;
     for window_center = LocalWindows'
         % Row and columns displacement required for center of window due to
         % padding
-        center = [window_center(2) + row_disp window_center(1) + col_disp];
+        center = [(window_center(2) + row_disp) (window_center(1) + col_disp)];
         
         % Create window
         window = IMG_Lab(center(1) - half_wwidth:center(1) + half_wwidth, ...
@@ -42,38 +36,47 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         F_Lab_vals = [];
         
         % Retrieve background and foreground color data at least 5 pixels away from boundary
-        pix_dists_to_boundary_mask = pix_dists_to_boundary(center(1) - half_wwidth:center(1) + half_wwidth, ...
-            center(2) - half_wwidth:center(2) + half_wwidth, :);
-        
+        pix_dists_to_boundary_window = pix_dists_to_boundary(center(1) - half_wwidth:center(1) + half_wwidth, ...
+            center(2) - half_wwidth:center(2) + half_wwidth);
+        %imshow(mat2gray(pix_dists_to_boundary_window, [0 20]));
         for row = 1:size(window, 1)
             for col = 1:size(window, 2)
                 if window_mask(row, col) == 0 && ...
-                        pix_dists_to_boundary_mask(row, col) > BoundaryWidth
+                        pix_dists_to_boundary_window(row, col) > BoundaryWidth
                     B_Lab_vals = [B_Lab_vals; window(row, col, 1) window(row, col, 2) window(row, col, 3)];
                 end
                 if window_mask(row, col) == 1 && ...
-                        pix_dists_to_boundary_mask(row, col) > BoundaryWidth
+                        pix_dists_to_boundary_window(row, col) > BoundaryWidth
                     F_Lab_vals = [F_Lab_vals; window(row, col, 1) window(row, col, 2) window(row, col, 3)];
                 end
             end
         end
         
+%         [r1, c1] = find(bwdist(window_mask) > 5);
+%         B_Lab_vals = impixel(window, c1, r1);
+%         
+%         inverted = window_mask==0;
+%         [r2, c2] = find(bwdist(inverted) > 5);
+%         F_Lab_vals = impixel(window, c2, r2);
+        
         % Fit GMM models
-        options = statset('MaxIter', 500);
+        options = statset('MaxIter', 700);
         F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
         B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
         
-        
         % Part 3.3 of project notes
         window_Lab_vals = reshape(window, [size(window, 1)^2 3]);
-        F_probs = get_fore_prob(F_gmm, B_gmm, window_Lab_vals, size(window, 1));
-        imshow(F_probs);
+        p_c_matrix = get_fore_prob(F_gmm, B_gmm, window_Lab_vals, WindowWidth + 1);
+        %imshow(p_c_matrix)
+        %imshow(reshape(pdf(B_gmm, window_Lab_vals), [size(window, 1) size(window, 1)]));
+        pdf(F_gmm, window_Lab_vals);
+        
         confidence_numer = 0;
         confidence_denom = 0;
         for row = 1:size(window, 1)
             for col = 1:size(window, 2)
-                weight = exp(-pix_dists_to_boundary_mask(row, col)^2 / (WindowWidth / 2)^2);
-                p_c = F_probs(row, col);
+                weight = exp(-pix_dists_to_boundary_window(row, col)^2 / (WindowWidth / 2)^2);
+                p_c = p_c_matrix(row, col);
                 confidence_numer = confidence_numer + abs(window_mask(row, col) - p_c) * weight;
                 confidence_denom = confidence_denom + weight;
             end
@@ -81,10 +84,11 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         
         color_model_confidence = 1 - (confidence_numer / confidence_denom);
         confidences{window_count} = color_model_confidence;
-        distances{window_count} = pix_dists_to_boundary_mask;
-        foreground_probs{window_count} = F_probs;
+        distances{window_count} = pix_dists_to_boundary_window;
+        foreground_probs{window_count} = p_c_matrix;
+        window_count = window_count + 1;
     end
-    
+    imshow(foreground_probs{1});
     ColorModels = struct('Confidences', confidences, 'Distances', distances, ...
         'ForegroundProbs', foreground_probs);
 end
