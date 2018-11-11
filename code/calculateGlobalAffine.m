@@ -21,6 +21,7 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     
     WarpedFrame = imwarp(IMG1, tform);
     WarpedMask = warp(Mask, tform);
+    WarpedMaskOutline = bwperim(WarpedMask, 4);
     WarpedLocalWindows = warpedWindows;
     
 end
