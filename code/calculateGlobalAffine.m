@@ -1,10 +1,12 @@
 function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calculateGlobalAffine(IMG1,IMG2,Mask,Windows)
 % CALCULATEGLOBALAFFINE: finds affine transform between two frames, and applies it to frame1, the mask, and local windows.
-    corners1 = cornermetric(IMG1, 'Harris');
-    corners2 = cornermetric(IMG2, 'Harris');
+    img1 = rgb2gray(IMG1);
+    img2 = rgb2gray(IMG2);
+    corners1 = detectHarrisFeatures(img1);
+    corners2 = detectHarrisFeatures(img2);
     
-    [features1, points1] = extractFeatures(corners1);
-    [features2, points2] = extractFeatures(corners2);
+    [features1, points1] = extractFeatures(img1, corners1);
+    [features2, points2] = extractFeatures(img2, corners2);
     
     matchedFeatures = matchFeatures(features1, features2);
     
@@ -13,14 +15,14 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     
     tform = estimateGeometricTransform(matchedPoints1, matchedPoints2, 'affine');
     
-    warpedWindows = [];
+    warpedWindows = {};
     
     for i = 1:length(Windows)
-        warpedWindows = [warpedWindows warp(Windows(i), tform)];
+        warpedWindows = [warpedWindows imwarp(Windows(i), tform)];
     end
     
     WarpedFrame = imwarp(IMG1, tform);
-    WarpedMask = warp(Mask, tform);
+    WarpedMask = imwarp(Mask, tform);
     WarpedMaskOutline = bwperim(WarpedMask, 4);
     WarpedLocalWindows = warpedWindows;
     
