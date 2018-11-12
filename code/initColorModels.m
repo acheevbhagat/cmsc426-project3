@@ -6,8 +6,11 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     confidences = cell(1, size(LocalWindows, 1));
     distances = cell(1, size(LocalWindows, 1));
     foreground_probs = cell(1, size(LocalWindows, 1));
+    window_masks = cell(1, size(LocalWindows, 1));
+    window_gmms = cell(1, size(LocalWindows, 1));
     
     half_wwidth = floor(WindowWidth / 2);
+    
     % Pad everything to avoid index out of bounds
     IMG = padarray(IMG, [half_wwidth half_wwidth], 0, 'both');
     Mask = padarray(Mask, [half_wwidth half_wwidth], 0, 'both');
@@ -86,11 +89,14 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         confidences{window_count} = color_model_confidence;
         distances{window_count} = pix_dists_to_boundary_window;
         foreground_probs{window_count} = p_c_matrix;
+        window_masks{window_count} = window_mask;
+        window_gmms{window_count} = {F_gmm B_gmm};
         window_count = window_count + 1;
     end
     imshow(foreground_probs{1});
-    ColorModels = struct('Confidences', confidences, 'Distances', distances, ...
-        'ForegroundProbs', foreground_probs);
+    ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
+        'ForegroundProbs', {foreground_probs}, 'SegmentationMasks', {window_masks}, ...
+        'GMMs', window_gmms);
 end
 
 % Get probabilities of pixels being in the foreground
