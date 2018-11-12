@@ -15,16 +15,10 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     
     tform = estimateGeometricTransform(matchedPoints1, matchedPoints2, 'affine');
     
-    warpedWindows = {};
-    
-    for i = 1:length(Windows)
-        warpedWindows = [warpedWindows imwarp(Windows(i), tform)];
-    end
-    
     WarpedFrame = imwarp(IMG1, tform);
     WarpedMask = imwarp(Mask, tform);
     WarpedMaskOutline = bwperim(WarpedMask, 4);
-    WarpedLocalWindows = warpedWindows;
+    WarpedLocalWindows = initLocalWindows(WarpedFrame, WarpedMask, 35, 60, true);
     
 end
 

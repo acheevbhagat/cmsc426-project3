@@ -28,8 +28,8 @@ for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
-% mask = roipoly(images{1});
-% save('mask.mat', 'mask');
+%mask = roipoly(images{1});
+%save('mask.mat', 'mask');
 mask = load('mask.mat');
 mask = mask.mask;
 imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
