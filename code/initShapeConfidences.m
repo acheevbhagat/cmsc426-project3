@@ -4,6 +4,7 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
     confidences = {};
     c_conf = ColorConfidences.Confidences;
     c_dist = ColorConfidences.Distances;
+    seg_masks = ColorConfidences.SegmentationMasks;
     %c_center = ColorConfidences.LocalWindowCenter;
     
     for window = 1:(length(LocalWindows))
@@ -31,5 +32,5 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
         confidences{window} = f_s;
     end
     imshow(confidences{10});
-    ShapeConfidences = struct('Confidences', confidences);
+    ShapeConfidences = struct('Confidences', {confidences}, 'SegmentationMasks', seg_masks);
 end
