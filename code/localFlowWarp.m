@@ -13,8 +13,8 @@ windows = LocalWindows;
 
 for i=1:size(windows,2)
     window = windows{i};
-    X = round(window.Position(1) - (Width/2));
-    Y = round(window.Position(2) - (Width/2));
+    X = round(window(1) - (Width/2));
+    Y = round(window(2) - (Width/2));
     XX = X + Width;
     YY = Y + Width;
     if(XX >= size(CurrentFrame, 2))
@@ -47,10 +47,10 @@ for i=1:size(windows,2)
     %    avg_Vy = 0;
     %end
     
-    window.Position = [(window.Position(1) + avg_Vx) ...
-        (window.Position(2) + avg_Vy)];
+    window = [(window(1) + avg_Vx) ...
+        (window(2) + avg_Vy)]; %window.Position(2)
     
-    windows{i}.Position = window.Position;    
+    windows{i} = window;
 end
 
 t = Width/2;
