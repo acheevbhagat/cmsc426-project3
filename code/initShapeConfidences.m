@@ -1,4 +1,4 @@
-function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences, WindowWidth, SigmaMin, A, fcutoff, R)
+function ShapeConfidences = initShapeConfidences(LocalWindows, ColorModels, WindowWidth, SigmaMin, A, fcutoff, R)
 % INITSHAPECONFIDENCES Initialize shape confidences.  ShapeConfidences is a struct you should define yourself.
     % Initalize setup values
     confidences = {};
@@ -35,11 +35,12 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
     imshow(confidences{10});
     ShapeConfidences = struct('Confidences', {confidences}, 'SegmentationMasks', seg_masks);
     %}
-    cConf = ColorConfidences.Confidences;
-    cDist = ColorConfidences.Distance;
-    cCenter = ColorConfidences.LocalWindowCenter;
+    sigmas = {};
+    cConf = ColorModels.Confidences;
+    cDist = ColorModels.Distance;
+    cCenter = ColorModels.LocalWindowCenter;
     for window = 1:(length(LocalWindows))
-        % Find index wihtin color confidences of the current window
+        % Find index within color confidences of the current window
         idx = find(cCenter==window);
         % Use index to set up initial values
         fc = cConf(idx);
@@ -53,7 +54,9 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorConfidences,
         % Calculate shape confidence value
         fs = 1 - exp((-(dx.^2)) / (sigma.^2));
         % Append to confidence vector
-        confidences = {confidences fs};
+        confidences{window} = fs;
+        sigmas{window} = sigma;
+        si
     end
-    ShapeConfidences = struct('Confidences', confidences);
+    ShapeConfidences = struct('Confidences', {confidences}, 'Sigmas', {sigmas});
 end
