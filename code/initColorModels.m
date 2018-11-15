@@ -13,6 +13,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     
     % Pad everything to avoid index out of bounds
     IMG = padarray(IMG, [half_wwidth half_wwidth], 0, 'both');
+    IMG_Lab = rgb2lab(IMG);
     Mask = padarray(Mask, [half_wwidth half_wwidth], 0, 'both');
     MaskOutline = padarray(MaskOutline, [half_wwidth half_wwidth], 0, 'both');
     pix_dists_to_boundary = bwdist(MaskOutline);
@@ -20,7 +21,6 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     row_disp = half_wwidth;
     col_disp = half_wwidth;
 
-    IMG_Lab = rgb2lab(IMG);
     % Loop through all windows along boundary
     window_count = 1;
     for window_center = LocalWindows'
@@ -54,13 +54,6 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
                 end
             end
         end
-        
-%         [r1, c1] = find(bwdist(window_mask) > 5);
-%         B_Lab_vals = impixel(window, c1, r1);
-%         
-%         inverted = window_mask==0;
-%         [r2, c2] = find(bwdist(inverted) > 5);
-%         F_Lab_vals = impixel(window, c2, r2);
         
         % Fit GMM models
         options = statset('MaxIter', 700);
@@ -96,7 +89,7 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
     imshow(foreground_probs{1});
     ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
         'ForegroundProbs', {foreground_probs}, 'SegmentationMasks', {window_masks}, ...
-        'GMMs', window_gmms);
+        'GMMs', {window_gmms});
 end
 
 % Get probabilities of pixels being in the foreground

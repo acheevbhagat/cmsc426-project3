@@ -8,7 +8,7 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
 % Width = wSize
 % Calculate tform
     opticFlow = opticalFlowHS;
-    flow = estimateFlow(opticFlow, rgb2gray(WarpedPrevFrame));
+    flow = estimateFlow(opticFlow, rgb2gray(WarpedPrevFrame))
     
     half_wwidth = floor(Width / 2);
     row_disp = half_wwidth;
@@ -23,7 +23,7 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
     for window_center = LocalWindows'
         % Row and columns displacement required for center of window due to
         % padding
-        center = [(window_center(2) + row_disp) (window_center(1) + col_disp)];
+        center = [(window_center(2) + row_disp) (window_center(1) + col_disp)]
         
         % Create window
         window = WarpedPrevFrame_gray(center(1) - half_wwidth:center(1) + half_wwidth, ...
@@ -45,18 +45,16 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
 %                 end
 %             end
 %         end
-        in_bounds_Vx = window_Vx .* window_mask;
-        in_bounds_Vy = window_Vy .* window_mask;
-        Vx_avg = sum(in_bounds_Vx(:)) / sum(Mask(:)==1);
-        Vy_avg = sum(in_bounds_Vy(:)) / sum(Mask(:)==1);
+        in_bounds_Vx = window_Vx .* Mask;
+        in_bounds_Vy = window_Vy .* Mask;
+        Vx_mean = sum(in_bounds_Vx(:)) / sum(Mask(:)==1);
+        Vy_mean = sum(in_bounds_Vy(:)) / sum(Mask(:)==1);
         
-        if isnan(Vx_avg) || isnan(Vy_avg)
-            Vx_avg = 0;
-            Vy_avg = 0;
-        end
-        new_window_center_pos = window_center' + [Vy_avg Vx_avg];
-        NewLocalWindows(window_count, :) = round(new_window_center_pos);
-        window_count = window_count + 1;
+        if isnan(Vx_mean) || isnan()
+        
+        avg_vec = mean(vecs_to_avg);
+        new_window_center_pos = window_center' + avg_vec;
+        NewLocalWindows(window_count, :) = new_window_center_pos;
     end
 end
 
