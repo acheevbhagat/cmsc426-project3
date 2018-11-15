@@ -48,8 +48,8 @@ ColorModels = ...
     initColorModels(images{1},mask,mask_outline,LocalWindows,BoundaryWidth,WindowWidth);
 
 % You should set these parameters yourself:
-fcutoff = 0.85;
-SigmaMin = 2;
+fcutoff = 0.1;
+SigmaMin = 10;
 SigmaMax = WindowWidth + 1;
 R = 2;
 A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
@@ -66,7 +66,7 @@ set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
 
-showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+%showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
 
 %%% MAIN LOOP %%%
 % Process each frame in the video.
@@ -76,7 +76,7 @@ for prev=1:(length(files)-1)
     
     %%% Global affine transform between previous and current frames:
     [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = ...
-        calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
+        calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows, WindowWidth);
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
@@ -105,6 +105,7 @@ for prev=1:(length(files)-1)
         warpedMask, ...
         warpedMaskOutline, ...
         WindowWidth, ...
+        BoundaryWidth, ...
         ColorModels, ...
         ShapeConfidences, ...
         ProbMaskThreshold, ...

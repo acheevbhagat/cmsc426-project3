@@ -30,6 +30,7 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     
     % Pad everything to avoid index out of bounds
     IMG = padarray(CurrentFrame, [half_wwidth half_wwidth], 0, 'both');
+    IMG_Lab = rgb2lab(IMG);
     Mask = padarray(WarpedMask, [half_wwidth half_wwidth], 0, 'both');
     MaskOutline = padarray(WarpedMaskOutline, [half_wwidth half_wwidth], 0, 'both');
     pix_dists_to_boundary = bwdist(WarpedMaskOutline);
@@ -44,16 +45,19 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         % padding
         center = [(window_center(2) + row_disp) (window_center(1) + col_disp)];
 
+        % Create window
+        window = IMG_Lab(center(1) - half_wwidth:center(1) + half_wwidth, ...
+            center(2) - half_wwidth:center(2) + half_wwidth, :);
         % Restrict mask to window's size and location
         window_mask = WarpedMask(center(1) - half_wwidth:center(1) + half_wwidth, ...
-            center(2) - half_wwidth:center(2) + half_wwidth);
+            center(2) - half_wwidth:center(2) + half_wwidth, :);
         
         f_s = all_f_s{window_count};
         p_c = all_p_c{window_count};
         
         p_k_f = zeros(size(window_mask));
-        for row = 1:size(window_mask, 1)
-            for col = 1:size(window_mask, 2)
+        for row = 1:size(window, 1)
+            for col = 1:size(window, 2)
                 f_s_x = f_s(row, col);
                 p_c_x = p_c(row, col);
                 
@@ -65,8 +69,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         window_count = window_count + 1;
     end
     
-    numers = zeros([size(IMG, 1) size(IMG, 2)]);
-    denoms = zeros([size(IMG, 1) size(IMG, 2)]);
+    numers = zeros([size(IMG_Lab, 1) size(IMG_Lab, 2)]);
+    denoms = zeros([size(IMG_Lab, 1) size(IMG_Lab, 2)]);
     epsilon = 0.1;
     window_count = 1;
     for window_center = NewLocalWindows'
@@ -91,12 +95,9 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     end
     
     p_f_matrix = (numers ./ denoms);
-    imshow(p_f_matrix);
+    imshow(mat2gray(p_f_matrix), [10 255]);
     p_f_matrix(isnan(p_f_matrix)) = 0;
-    mask = p_f_matrix(half_wwidth + 1:size(p_f_matrix, 1) - half_wwidth, ...
-        half_wwidth + 1:size(p_f_matrix, 2) - half_wwidth);
-    mask = mask > 0.7;
-    size(mask)
+    mask = p_f_matrix;
 end
 
 function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...
@@ -164,6 +165,7 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
                         prev_model_p_c_matrix(row, col) < low_thresh
                     B_Lab_vals = [B_Lab_vals; window(row, col, 1) window(row, col, 2) window(row, col, 3)];
                 end
+                prev_model_p_c_matrix(row, col)
                 if window_mask(row, col) == 1 && ...
                         pix_dists_to_boundary_window(row, col) > BoundaryWidth && ...
                         prev_model_p_c_matrix(row, col) > high_thresh
