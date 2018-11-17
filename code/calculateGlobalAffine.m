@@ -26,8 +26,13 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     
     WarpedFrame = imwarp(IMG1, tform, 'OutputView', imref2d(size(IMG1)));
     WarpedMask = imwarp(Mask, tform, 'OutputView', imref2d(size(IMG1)));
+    
+    disp(size(Mask))
+    disp(" --------------------------- ")
+    disp(size(WarpedMask))
+    
     WarpedMaskOutline = bwperim(WarpedMask, 4);
-    WarpedLocalWindows = round(transformPointsForward(tform, Windows));
-    %[~, WarpedLocalWindows] = initLocalWindows(WarpedFrame, WarpedMask, length(Windows), Width, true); 
+    %WarpedLocalWindows = round(transformPointsForward(tform, Windows));
+    [~, WarpedLocalWindows] = initLocalWindows(WarpedFrame, WarpedMask, length(Windows), Width, true); 
 end
 

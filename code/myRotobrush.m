@@ -12,6 +12,7 @@ BoundaryWidth = 5;
 
 % Load images:
 fpath = '../input';
+new_fpath = '../bs';
 files = dir(fullfile(fpath, '*.jpg'));
 imageNames = zeros(length(files),1);
 images = cell(length(files),1);
@@ -36,8 +37,8 @@ imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
-imwrite(I, fullfile(fpath, strip(imageNames(1,:))));
-outputVideo = VideoWriter(fullfile(fpath,'video1.mp4'),'MPEG-4');
+imwrite(I, fullfile(new_fpath, strip(imageNames(1,:))));
+outputVideo = VideoWriter(fullfile(new_fpath,'video.mp4'),'MPEG-4');
 open(outputVideo);
 writeVideo(outputVideo,I);
 
@@ -129,7 +130,7 @@ for prev=1:(length(files)-1)
     set(gca,'position',[0 0 1 1],'units','normalized')
     F = getframe(gcf);
     [I,~] = frame2im(F);
-    imwrite(I, fullfile(fpath, strip(imageNames(curr,:))));
+    imwrite(I, fullfile(new_fpath, strip(imageNames(curr,:))));
     writeVideo(outputVideo,I);
 
     imshow(images{curr})
