@@ -37,7 +37,7 @@ set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
 imwrite(I, fullfile(fpath, strip(imageNames(1,:))));
-outputVideo = VideoWriter(fullfile(fpath,'video.mp4'),'MPEG-4');
+outputVideo = VideoWriter(fullfile(fpath,'video1.mp4'),'MPEG-4');
 open(outputVideo);
 writeVideo(outputVideo,I);
 
@@ -47,9 +47,11 @@ writeVideo(outputVideo,I);
 ColorModels = ...
     initColorModels(images{1},mask,mask_outline,LocalWindows,BoundaryWidth,WindowWidth);
 
+origColorModel = ColorModels;
+
 % You should set these parameters yourself:
-fcutoff = 0.85;
-SigmaMin = 2;
+fcutoff = 0.1;
+SigmaMin = 10;
 SigmaMax = WindowWidth + 1;
 R = 2;
 A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
@@ -66,7 +68,7 @@ set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
 
-showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+%showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
 
 %%% MAIN LOOP %%%
 % Process each frame in the video.
@@ -76,7 +78,7 @@ for prev=1:(length(files)-1)
     
     %%% Global affine transform between previous and current frames:
     [warpedFrame, warpedMask, warpedMaskOutline, warpedLocalWindows] = ...
-        calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows);
+        calculateGlobalAffine(images{prev}, images{curr}, mask, LocalWindows, WindowWidth);
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
@@ -105,17 +107,23 @@ for prev=1:(length(files)-1)
         warpedMask, ...
         warpedMaskOutline, ...
         WindowWidth, ...
+        BoundaryWidth, ...
         ColorModels, ...
         ShapeConfidences, ...
         ProbMaskThreshold, ...
         fcutoff, ...
         SigmaMin, ...
         R, ...
-        A ...
+        A, ...
+        origColorModel ...
     );
 
     mask_outline = bwperim(mask,4);
 
+    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    
+    
+    
     % Write video frame:
     imshow(imoverlay(images{curr}, boundarymask(mask,8), 'red'));
     set(gca,'position',[0 0 1 1],'units','normalized')
@@ -126,11 +134,13 @@ for prev=1:(length(files)-1)
 
     imshow(images{curr})
     hold on
-    showLocalWindows(LocalWindows,WindowWidth,'r.');
+    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    %showLocalWindows(LocalWindows,WindowWidth,'r.');
     hold off
     set(gca,'position',[0 0 1 1],'units','normalized')
     F = getframe(gcf);
     [I,~] = frame2im(F);
+    
 end
 
 close(outputVideo);
