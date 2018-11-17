@@ -51,15 +51,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         f_s = all_f_s{window_count};
         p_c = all_p_c{window_count};
         
-        p_k_f = zeros(size(window_mask));
-        for row = 1:size(window_mask, 1)
-            for col = 1:size(window_mask, 2)
-                f_s_x = f_s(row, col);
-                p_c_x = p_c(row, col);
-                
-                p_k_f(row, col) = f_s_x * window_mask(row, col) + (1 - f_s_x) * p_c_x;
-            end
-        end
+        %p_k_f = zeros(size(window_mask));
+        p_k_f = f_s .* window_mask + (ones(size(f_s)) - f_s) .* p_c;
         
         p_k_f_windows{window_count} = p_k_f;
         window_count = window_count + 1;
@@ -95,8 +88,7 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     p_f_matrix(isnan(p_f_matrix)) = 0;
     mask = p_f_matrix(half_wwidth + 1:size(p_f_matrix, 1) - half_wwidth, ...
         half_wwidth + 1:size(p_f_matrix, 2) - half_wwidth);
-    mask = mask > 0.7;
-    size(mask)
+    mask = mask > ProbMaskThreshold;
 end
 
 function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...
@@ -174,8 +166,19 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         
         % Fit GMM models
         options = statset('MaxIter', 700);
-        new_F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
-        new_B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        if size(F_Lab_vals, 1) > size(F_Lab_vals, 2) && size(B_Lab_vals, 1) > size(B_Lab_vals, 2)
+            new_F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+            new_B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        elseif size(F_Lab_vals, 1) < size(F_Lab_vals, 2)
+            new_F_gmm = prev_F_gmm;
+            new_B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        elseif size(B_Lab_vals, 1) < size(B_Lab_vals, 2)
+            new_F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+            new_B_gmm = prev_B_gmm;
+        else
+            new_F_gmm = prev_F_gmm;
+            new_B_gmm = prev_B_gmm;
+        end
         
         % Combine foreground and background probabilities
         new_model_p_c_matrix = get_fore_prob(new_F_gmm, new_B_gmm, window_Lab_vals, WindowWidth + 1);

@@ -5,8 +5,8 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 60;  
-ProbMaskThreshold = -1; 
+WindowWidth = 74;  
+ProbMaskThreshold = 0.55; 
 NumWindows= 35; 
 BoundaryWidth = 5;
 
