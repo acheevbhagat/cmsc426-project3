@@ -37,7 +37,7 @@ set(gca,'position',[0 0 1 1],'units','normalized')
 F = getframe(gcf);
 [I,~] = frame2im(F);
 imwrite(I, fullfile(fpath, strip(imageNames(1,:))));
-outputVideo = VideoWriter(fullfile(fpath,'video.mp4'),'MPEG-4');
+outputVideo = VideoWriter(fullfile(fpath,'video1.mp4'),'MPEG-4');
 open(outputVideo);
 writeVideo(outputVideo,I);
 
