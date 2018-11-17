@@ -13,14 +13,13 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         fcutoff, ...
         SigmaMin, ...
         R, ...
-        A, ...
-        origColorModel ...
+        A ...
     )
 % UPDATEMODELS: update shape and color models, and apply the result to generate a new mask.
 % Feel free to redefine this as several different functions if you prefer.
     
     NewColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...
-        NewLocalWindows, BoundaryWidth, WindowWidth, ColorModels, origColorModel);
+        NewLocalWindows, BoundaryWidth, WindowWidth, ColorModels);
     ShapeModels = update_shape_models(NewLocalWindows, NewColorModels, WindowWidth, ...
         SigmaMin, A, fcutoff, R);
     
@@ -52,15 +51,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         f_s = all_f_s{window_count};
         p_c = all_p_c{window_count};
         
-        p_k_f = zeros(size(window_mask));
-        for row = 1:size(window_mask, 1)
-            for col = 1:size(window_mask, 2)
-                f_s_x = f_s(row, col);
-                p_c_x = p_c(row, col);
-                
-                p_k_f(row, col) = f_s_x * window_mask(row, col) + (1 - f_s_x) * p_c_x;
-            end
-        end
+        %p_k_f = zeros(size(window_mask));
+        p_k_f = f_s .* window_mask + (ones(size(f_s)) - f_s) .* p_c;
         
         p_k_f_windows{window_count} = p_k_f;
         window_count = window_count + 1;
@@ -96,12 +88,11 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     p_f_matrix(isnan(p_f_matrix)) = 0;
     mask = p_f_matrix(half_wwidth + 1:size(p_f_matrix, 1) - half_wwidth, ...
         half_wwidth + 1:size(p_f_matrix, 2) - half_wwidth);
-    mask = mask > 0.7;
-    size(mask)
+    mask = mask > ProbMaskThreshold;
 end
 
 function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...
-    NewLocalWindows, BoundaryWidth, WindowWidth, OldColorModels, origColorModel)
+    NewLocalWindows, BoundaryWidth, WindowWidth, OldColorModels)
     confidences = cell(1, size(NewLocalWindows, 1));
     distances = cell(1, size(NewLocalWindows, 1));
     foreground_probs = cell(1, size(NewLocalWindows, 1));
@@ -128,11 +119,6 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
     % Thresholds for sample data for updated GMMs
     high_thresh = 0.75;
     low_thresh = 0.25;
-    
-    % Flag to keep track of whether ColorModels were totally recalculated.
-    % If it does, then break the window loop and ask user to create new
-    % mask, and create colormodels based on that mask.
-    recalced = false;
     
     % Loop through all windows along boundary
     window_count = 1;
@@ -179,11 +165,20 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         end
         
         % Fit GMM models
-        % Use original GMM models for new probs to make stabilize the color
-        % model and ensure that errors don't propogate
-        origGMM = origColorModel.GMMs{window_count};
-        new_F_gmm = origGMM{1};
-        new_B_gmm = origGMM{2};
+        options = statset('MaxIter', 700);
+        if size(F_Lab_vals, 1) > size(F_Lab_vals, 2) && size(B_Lab_vals, 1) > size(B_Lab_vals, 2)
+            new_F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+            new_B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        elseif size(F_Lab_vals, 1) < size(F_Lab_vals, 2)
+            new_F_gmm = prev_F_gmm;
+            new_B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        elseif size(B_Lab_vals, 1) < size(B_Lab_vals, 2)
+            new_F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+            new_B_gmm = prev_B_gmm;
+        else
+            new_F_gmm = prev_F_gmm;
+            new_B_gmm = prev_B_gmm;
+        end
         
         % Combine foreground and background probabilities
         new_model_p_c_matrix = get_fore_prob(new_F_gmm, new_B_gmm, window_Lab_vals, WindowWidth + 1);
@@ -193,30 +188,22 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         
         % If number of foreground pixels doesn't increase, use new GMM,
         % else, use old GMM
-        if num_F_pixels_prev_GMM >= num_F_pixels_new_GMM 
-            % If the difference is greater than some percentage, detect an
-            % error and ask the user to create a new mask for use by the
-            % color model
-            if (1 - (num_F_pixels_new_GMM / num_F_pixels_prev_GMM)) > 0.3
-                recalced = true;
-                break;
-            else
-                confidence_numer = 0;
-                confidence_denom = 0;
-                for row = 1:size(window, 1)
-                    for col = 1:size(window, 2)
-                        weight = exp(-pix_dists_to_boundary_window(row, col)^2 / (WindowWidth / 2)^2);
-                        p_c = prev_model_p_c_matrix(row, col);
-                        confidence_numer = confidence_numer + abs(window_mask(row, col) - p_c) * weight;
-                        confidence_denom = confidence_denom + weight;
-                    end
+        if num_F_pixels_new_GMM <= num_F_pixels_prev_GMM
+            confidence_numer = 0;
+            confidence_denom = 0;
+            for row = 1:size(window, 1)
+                for col = 1:size(window, 2)
+                    weight = exp(-pix_dists_to_boundary_window(row, col)^2 / (WindowWidth / 2)^2);
+                    p_c = prev_model_p_c_matrix(row, col);
+                    confidence_numer = confidence_numer + abs(window_mask(row, col) - p_c) * weight;
+                    confidence_denom = confidence_denom + weight;
                 end
-
-                color_model_confidence = 1 - (confidence_numer / confidence_denom);
-                p_c_matrix = new_model_p_c_matrix;
-                F_gmm = new_F_gmm;
-                B_gmm = new_B_gmm;
             end
+            
+            color_model_confidence = 1 - (confidence_numer / confidence_denom);
+            p_c_matrix = new_model_p_c_matrix;
+            F_gmm = new_F_gmm;
+            B_gmm = new_B_gmm;
         else
             color_model_confidence = prev_confidences{window_count};
             p_c_matrix = prev_model_p_c_matrix;
@@ -231,18 +218,10 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         window_gmms{window_count} = {F_gmm B_gmm};
         window_count = window_count + 1;
     end
-    if recalced
-        disp("Margin of error is too large, please create new mask");
-        mask = roipoly(CurrentFrame);
-        mask_outline = bwperim(mask, 4);
-        ColorModels = initColorModels(CurrentFrame, mask, ...
-            mask_outline, NewLocalWindows, BoundaryWidth, WindowWidth);
-    else
-        imshow(foreground_probs{1});
-        ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
-            'ForegroundProbs', {foreground_probs}, 'SegmentationMasks', {window_masks}, ...
-            'GMMs', {window_gmms});
-    end
+    imshow(foreground_probs{1});
+    ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
+        'ForegroundProbs', {foreground_probs}, 'SegmentationMasks', {window_masks}, ...
+        'GMMs', {window_gmms});
 end
 
 function ShapeModels = update_shape_models(NewLocalWindows, ColorModels, WindowWidth, SigmaMin, A, fcutoff, R)

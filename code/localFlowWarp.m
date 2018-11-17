@@ -8,14 +8,15 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
 % Width = wSize
 % Calculate tform
     opticFlow = opticalFlowHS;
-    flow = estimateFlow(opticFlow, rgb2gray(WarpedPrevFrame));
+    estimateFlow(opticFlow, rgb2gray(WarpedPrevFrame));
+    flow = estimateFlow(opticFlow, rgb2gray(CurrentFrame));
     
     half_wwidth = floor(Width / 2);
     row_disp = half_wwidth;
     col_disp = half_wwidth;
     
-    WarpedPrevFrame = padarray(WarpedPrevFrame, [half_wwidth half_wwidth], 0, 'both');
-    WarpedPrevFrame_gray = rgb2gray(WarpedPrevFrame);
+%     CurrentFrame = padarray(CurrentFrame, [half_wwidth half_wwidth], 0, 'both');
+%     CurrentFrame_gray = rgb2gray(CurrentFrame);
     Mask = padarray(Mask, [half_wwidth half_wwidth], 0, 'both');
     
     NewLocalWindows = zeros(size(LocalWindows));
@@ -26,8 +27,8 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
         center = [(window_center(2) + row_disp) (window_center(1) + col_disp)];
         
         % Create window
-        window = WarpedPrevFrame_gray(center(1) - half_wwidth:center(1) + half_wwidth, ...
-            center(2) - half_wwidth:center(2) + half_wwidth, :);
+%         window = CurrentFrame_gray(center(1) - half_wwidth:center(1) + half_wwidth, ...
+%             center(2) - half_wwidth:center(2) + half_wwidth, :);
         % Restrict mask to window's size and location
         window_mask = Mask(center(1) - half_wwidth:center(1) + half_wwidth, ...
             center(2) - half_wwidth:center(2) + half_wwidth, :);
@@ -37,14 +38,6 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
         window_Vy = flow.Vy(center(1) - half_wwidth:center(1) + half_wwidth, ...
             center(2) - half_wwidth:center(2) + half_wwidth);
         
-%         vecs_to_avg = [];
-%         for row = 1:Width+1
-%             for col = 1:Width+1
-%                 if window_mask(row, col) == 1
-%                     vecs_to_avg = [vecs_to_avg window_flow(row, col)];
-%                 end
-%             end
-%         end
         in_bounds_Vx = window_Vx .* window_mask;
         in_bounds_Vy = window_Vy .* window_mask;
         Vx_avg = sum(in_bounds_Vx(:)) / sum(Mask(:)==1);
@@ -54,7 +47,7 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
             Vx_avg = 0;
             Vy_avg = 0;
         end
-        new_window_center_pos = window_center' + [Vy_avg Vx_avg];
+        new_window_center_pos = window_center' + [Vx_avg Vy_avg];
         NewLocalWindows(window_count, :) = round(new_window_center_pos);
         window_count = window_count + 1;
     end
