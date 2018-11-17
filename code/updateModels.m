@@ -174,9 +174,11 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         end
         
         % Fit GMM models
-        options = statset('MaxIter', 700);
-        new_F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
-        new_B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.001, 'Options', options);
+        % Use original GMM models for new probs to make stabilize the color
+        % model and ensure that errors don't propogate
+        origGMM = origColorModel.GMMs{window_count};
+        new_F_gmm = origGMM{1};
+        new_B_gmm = origGMM{2};
         
         % Combine foreground and background probabilities
         new_model_p_c_matrix = get_fore_prob(new_F_gmm, new_B_gmm, window_Lab_vals, WindowWidth + 1);
