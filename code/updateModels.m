@@ -188,7 +188,7 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         
         % If number of foreground pixels doesn't increase, use new GMM,
         % else, use old GMM
-        if num_F_pixels_new_GMM <= num_F_pixels_prev_GMM
+        if num_F_pixels_prev_GMM <= num_F_pixels_new_GMM 
             confidence_numer = 0;
             confidence_denom = 0;
             for row = 1:size(window, 1)

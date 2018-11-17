@@ -120,6 +120,10 @@ for prev=1:(length(files)-1)
 
     mask_outline = bwperim(mask,4);
 
+    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    
+    
+    
     % Write video frame:
     imshow(imoverlay(images{curr}, boundarymask(mask,8), 'red'));
     set(gca,'position',[0 0 1 1],'units','normalized')
@@ -130,11 +134,13 @@ for prev=1:(length(files)-1)
 
     imshow(images{curr})
     hold on
-    showLocalWindows(LocalWindows,WindowWidth,'r.');
+    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    %showLocalWindows(LocalWindows,WindowWidth,'r.');
     hold off
     set(gca,'position',[0 0 1 1],'units','normalized')
     F = getframe(gcf);
     [I,~] = frame2im(F);
+    
 end
 
 close(outputVideo);
