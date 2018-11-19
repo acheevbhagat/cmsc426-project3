@@ -7,10 +7,10 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
 % Mask = 
 % Width = wSize
 % Calculate tform
-    opticFlow = opticalFlowHS;
+    opticFlow = opticalFlowFarneback;
     estimateFlow(opticFlow, rgb2gray(WarpedPrevFrame));
     flow = estimateFlow(opticFlow, rgb2gray(CurrentFrame));
-    
+    plot(flow);
     half_wwidth = floor(Width / 2);
     row_disp = half_wwidth;
     col_disp = half_wwidth;
@@ -40,8 +40,11 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
         
         in_bounds_Vx = window_Vx .* window_mask;
         in_bounds_Vy = window_Vy .* window_mask;
-        Vx_avg = sum(in_bounds_Vx(:)) / sum(Mask(:)==1);
-        Vy_avg = sum(in_bounds_Vy(:)) / sum(Mask(:)==1);
+        Vx_avg = sum(in_bounds_Vx(:)) / (Width * Width);
+        Vy_avg = sum(in_bounds_Vy(:)) / (Width * Width);
+        
+        disp(Vx_avg)
+        disp(Vy_avg)
         
         if isnan(Vx_avg) || isnan(Vy_avg)
             Vx_avg = 0;
