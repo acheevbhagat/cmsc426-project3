@@ -6,8 +6,8 @@
 
 % Some parameters you need to tune:
 WindowWidth = 74;  
-ProbMaskThreshold = 0.55; 
-NumWindows= 35; 
+ProbMaskThreshold = 0.4; 
+NumWindows= 30; 
 BoundaryWidth = 5;
 
 % Load images:
@@ -29,8 +29,8 @@ for i=1:length(files)
     images{i} = im2double(imread(fullfile(fpath, strip(imageNames(i,:)))));
 end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
-%mask = roipoly(images{1});
-%save('mask.mat', 'mask');
+% mask = roipoly(images{1});
+% save('mask2.mat', 'mask');
 mask = load('mask.mat');
 mask = mask.mask;
 imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
@@ -52,7 +52,7 @@ origColorModel = ColorModels;
 
 % You should set these parameters yourself:
 fcutoff = 0.1;
-SigmaMin = 10;
+SigmaMin = 7;
 SigmaMax = WindowWidth + 1;
 R = 2;
 A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
@@ -135,8 +135,8 @@ for prev=1:(length(files)-1)
 
     imshow(images{curr})
     hold on
-    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
-    %showLocalWindows(LocalWindows,WindowWidth,'r.');
+    %showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    showLocalWindows(LocalWindows,WindowWidth,'r.');
     hold off
     set(gca,'position',[0 0 1 1],'units','normalized')
     F = getframe(gcf);
