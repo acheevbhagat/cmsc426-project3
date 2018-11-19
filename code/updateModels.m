@@ -85,11 +85,15 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     end
     
     p_f_matrix = (numers ./ denoms);
-    imshow(p_f_matrix);
+    %imshow(p_f_matrix);
     p_f_matrix(isnan(p_f_matrix)) = 0;
     mask = p_f_matrix(half_wwidth + 1:size(p_f_matrix, 1) - half_wwidth, ...
         half_wwidth + 1:size(p_f_matrix, 2) - half_wwidth);
-    mask = mask > ProbMaskThreshold;
+    mask = round(mask > ProbMaskThreshold);
+    mask = imfill(mask, 'holes');
+    figure(1)
+    imshow(mask)
+    [MaskOutline, LocalWindows] = initLocalWindows(CurrentFrame, mask, length(LocalWindows), WindowWidth, true);
 end
 
 function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...
