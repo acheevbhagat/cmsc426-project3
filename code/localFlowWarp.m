@@ -47,7 +47,7 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
             Vy_avg = 0;
         end
         new_window_center_pos = window_center' + [Vx_avg Vy_avg];
-        NewLocalWindows(window_count, :) = round(new_window_center_pos');
+        NewLocalWindows(window_count, :) = round(new_window_center_pos);
         window_count = window_count + 1;
     end
 end
