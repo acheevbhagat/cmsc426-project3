@@ -83,8 +83,10 @@ for prev=1:(length(files)-1)
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
-        localFlowWarp(warpedFrame, images{curr}, warpedLocalWindows,warpedMask,WindowWidth);
+        localFlowWarp(warpedFrame, images{curr}, LocalWindows,warpedMask,WindowWidth);
     
+%    NewLocalWindows = warpedLocalWindows;
+ 
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
@@ -135,8 +137,8 @@ for prev=1:(length(files)-1)
 
     imshow(images{curr})
     hold on
-    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
-    %showLocalWindows(LocalWindows,WindowWidth,'r.');
+    %showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    showLocalWindows(LocalWindows,WindowWidth,'r.');
     hold off
     set(gca,'position',[0 0 1 1],'units','normalized')
     F = getframe(gcf);
