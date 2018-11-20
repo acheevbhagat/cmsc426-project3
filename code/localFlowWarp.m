@@ -10,7 +10,6 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
     opticFlow = opticalFlowFarneback;
     estimateFlow(opticFlow, rgb2gray(WarpedPrevFrame));
     flow = estimateFlow(opticFlow, rgb2gray(CurrentFrame));
-    plot(flow);
     half_wwidth = floor(Width / 2);
     row_disp = half_wwidth;
     col_disp = half_wwidth;
@@ -43,15 +42,12 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
         Vx_avg = sum(in_bounds_Vx(:)) / (Width * Width);
         Vy_avg = sum(in_bounds_Vy(:)) / (Width * Width);
         
-        disp(Vx_avg)
-        disp(Vy_avg)
-        
         if isnan(Vx_avg) || isnan(Vy_avg)
             Vx_avg = 0;
             Vy_avg = 0;
         end
         new_window_center_pos = window_center' + [Vx_avg Vy_avg];
-        NewLocalWindows(window_count, :) = round(new_window_center_pos);
+        NewLocalWindows(window_count, :) = round(new_window_center_pos');
         window_count = window_count + 1;
     end
 end

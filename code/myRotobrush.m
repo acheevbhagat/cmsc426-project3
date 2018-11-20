@@ -83,7 +83,7 @@ for prev=1:(length(files)-1)
     
     %%% Calculate and apply local warping based on optical flow:
     NewLocalWindows = ...
-        localFlowWarp(warpedFrame, images{curr}, LocalWindows,warpedMask,WindowWidth);
+        localFlowWarp(warpedFrame, images{curr}, warpedLocalWindows,warpedMask,WindowWidth);
     
 %    NewLocalWindows = warpedLocalWindows;
  
