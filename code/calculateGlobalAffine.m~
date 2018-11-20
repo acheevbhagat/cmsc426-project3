@@ -26,12 +26,12 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     [f1, d1] = vl_sift(IMG1_gray);
     [f2, d2] = vl_sift(IMG2_gray);
     
-    matches = vl_ubcmatch(d1, d2, 50);
-    adjustment = ones(size(matches'));
-    adjustment(:, 1) = adjustment(:, 1) .* (x_min - Width);
-    adjustment(:, 2) = adjustment(:, 2) .* (y_min - Width);
-    matched_pts1 = round(f1(1:2, matches(1, :))' + adjustment);
-    matched_pts2 = round(f2(1:2, matches(2, :))' + adjustment);
+    matches = vl_ubcmatch(d1, d2, 40);
+    adjustment = ones(size(matched_pts1));
+    adjustment(:, 1) = adjustment(:, 1) .* (y_min - Width);
+    adjustment(:, 2) = adjustment(:, 2)
+    matched_pts1 = round(f1(1:2, matches(1, :))');
+    matched_pts2 = round(f2(1:2, matches(2, :))');
     
     %showMatchedFeatures(IMG1_gray, IMG2_gray, matched_pts1, matched_pts2, 'montage');
     

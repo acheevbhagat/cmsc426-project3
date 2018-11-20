@@ -39,8 +39,8 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
         
         in_bounds_Vx = window_Vx .* window_mask;
         in_bounds_Vy = window_Vy .* window_mask;
-        Vx_avg = sum(in_bounds_Vx(:)) / (Width * Width);
-        Vy_avg = sum(in_bounds_Vy(:)) / (Width * Width);
+        Vx_avg = sum(in_bounds_Vx(:)) / Width^2;
+        Vy_avg = sum(in_bounds_Vy(:)) / Width^2;
         
         if isnan(Vx_avg) || isnan(Vy_avg)
             Vx_avg = 0;
