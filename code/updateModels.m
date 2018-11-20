@@ -18,7 +18,6 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     )
 % UPDATEMODELS: update shape and color models, and apply the result to generate a new mask.
 % Feel free to redefine this as several different functions if you prefer.
-    
     NewColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...
         NewLocalWindows, BoundaryWidth, WindowWidth, ColorModels, origColorModel);
     ShapeModels = update_shape_models(NewLocalWindows, NewColorModels, WindowWidth, ...
@@ -89,11 +88,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     p_f_matrix(isnan(p_f_matrix)) = 0;
     mask = p_f_matrix(half_wwidth + 1:size(p_f_matrix, 1) - half_wwidth, ...
         half_wwidth + 1:size(p_f_matrix, 2) - half_wwidth);
-    mask = round(mask > ProbMaskThreshold);
-    mask = imfill(mask, 'holes');
-    figure(1)
-    imshow(mask)
-    [MaskOutline, LocalWindows] = initLocalWindows(CurrentFrame, mask, length(LocalWindows), WindowWidth, true);
+    mask = mask > ProbMaskThreshold;
+    LocalWindows = NewLocalWindows;
 end
 
 function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskOutline, ...

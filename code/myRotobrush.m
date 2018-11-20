@@ -85,6 +85,8 @@ for prev=1:(length(files)-1)
     NewLocalWindows = ...
         localFlowWarp(warpedFrame, images{curr}, warpedLocalWindows,warpedMask,WindowWidth);
     
+%    NewLocalWindows = warpedLocalWindows;
+ 
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
