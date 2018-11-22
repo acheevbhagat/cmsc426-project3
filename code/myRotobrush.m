@@ -30,8 +30,8 @@ for i=1:length(files)
 end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
 % mask = roipoly(images{1});
-% save('mask3.mat', 'mask');
-mask = load('mask3.mat');
+% save('mask4.mat', 'mask');
+mask = load('mask1.mat');
 mask = mask.mask;
 imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
@@ -51,10 +51,10 @@ ColorModels = ...
 origColorModel = ColorModels;
 
 % You should set these parameters yourself:
-fcutoff = 0.90;
-SigmaMin = 40;
+fcutoff = 0.9;
+SigmaMin = 2;
 SigmaMax = WindowWidth + 1;
-R = 3;
+R = 2;
 A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
 ShapeConfidences = ...
     initShapeConfidences(LocalWindows,ColorModels,...
@@ -90,8 +90,8 @@ for prev=1:(length(files)-1)
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
-    %showLocalWindows(warpedLocalWindows,WindowWidth,'r.');
-    %showLocalWindows(NewLocalWindows,WindowWidth,'b.');
+    showLocalWindows(warpedLocalWindows,WindowWidth,'r.');
+    showLocalWindows(NewLocalWindows,WindowWidth,'b.');
     hold off
     
     %%% UPDATE SHAPE AND COLOR MODELS:

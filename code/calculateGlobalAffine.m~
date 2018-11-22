@@ -44,8 +44,8 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     
     matched_pts2_in_bounds = matched_pts2(matched_idxs, :);
     
-%     figure(3)
-%     showMatchedFeatures(IMG1_gray, IMG2_gray, matched_pts1_in_bounds, matched_pts2_in_bounds, 'montage');
+    figure(3)
+    showMatchedFeatures(IMG1_gray, IMG2_gray, matched_pts1_in_bounds, matched_pts2_in_bounds, 'montage');
     
     adjustment = ones(size(matched_pts1_in_bounds));
     adjustment(:, 1) = adjustment(:, 1) .* (x_min - Width/2);
@@ -60,19 +60,14 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     WarpedMask = imwarp(Mask, tform, 'OutputView', imref2d(size(IMG1)));
     WarpedMaskOutline = bwperim(WarpedMask, 4);
     WarpedLocalWindows = round(transformPointsForward(tform, Windows));
+    for i = 1:length(WarpedLocalWindows)
+        coord = WarpedLocalWindows(i, :)
+        if coord(1) > size(IMG)
+            
+        end
+    end
     WarpedLocalWindows = WarpedLocalWindows(~any(isnan(WarpedLocalWindows) | ...
         isinf(WarpedLocalWindows), 2), :);
-    
-    for i = 1:length(WarpedLocalWindows)
-        coord = WarpedLocalWindows(i, :);
-        if coord(1) > size(WarpedFrame, 2)
-            coord(1) = size(WarpedFrame, 2);
-        end
-        if coord(2) > size(WarpedFrame, 1)
-            coord(2) = size(WarpedFrame, 1);
-        end
-        WarpedLocalWindows(i, :) = coord;
-    end
     %[~, WarpedLocalWindows] = initLocalWindows(WarpedFrame, WarpedMask, length(Windows), Width, true); 
 end
  

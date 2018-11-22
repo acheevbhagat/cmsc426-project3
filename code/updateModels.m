@@ -58,7 +58,6 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         f_s = all_f_s{window_count};
         p_c = all_p_c{window_count};
         
-        %p_k_f = zeros(size(window_mask));
         p_k_f = f_s .* window_mask + (ones(size(f_s)) - f_s) .* p_c;
         
         p_k_f_windows{window_count} = p_k_f;
@@ -91,7 +90,7 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     end
     
     p_f_matrix = (numers ./ denoms);
-    imshow(p_f_matrix);
+    %imshow(p_f_matrix);
     p_f_matrix(isnan(p_f_matrix)) = 0;
     mask = p_f_matrix;
 %     mask = p_f_matrix(row_disp + 1:size(p_f_matrix, 1) - row_disp, ...
@@ -101,7 +100,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
     y_max = max(NewLocalWindows(:, 2));
     x_min = min(NewLocalWindows(:, 1));
     x_max = max(NewLocalWindows(:, 1));
-    
+%     figure(7)
+%     imshow(mask)
     cropped_frame = IMG(y_min - half_wwidth + row_disp:y_max + half_wwidth + row_disp, ...
         x_min - half_wwidth + col_disp:x_max + half_wwidth + col_disp);
     mask = mask(y_min - half_wwidth + row_disp:y_max + half_wwidth + row_disp, ...
@@ -117,6 +117,8 @@ function [mask, LocalWindows, ColorModels, ShapeConfidences] = ...
         end
     end
     
+    size(mask)
+    size(CurrentFrame)
     mask = final_mask(row_disp + 1:size(final_mask, 1) - row_disp, ...
         col_disp + 1:size(final_mask, 2) - col_disp);
     LocalWindows = NewLocalWindows;
@@ -248,9 +250,11 @@ function [ColorModels, remasked, NewMask, NewMaskOutline, NewWindows] = update_c
         window_gmms{window_count} = {F_gmm B_gmm};
         window_count = window_count + 1;
     end
+    
+    %%%%%% EXTRA CREDIT: Color Model Stabilization %%%%%%
     remasked = false;
-    if (1 - total_num_prev_pixels / total_num_new_pixels) > 0.18 || ...
-            (1 - total_num_new_pixels / total_num_prev_pixels) > 0.18
+    if (1 - total_num_prev_pixels / total_num_new_pixels) > 0.14 || ...
+            (1 - total_num_new_pixels / total_num_prev_pixels) > 0.14
         disp('Remask');
         beep
         remasked = true;
@@ -270,8 +274,8 @@ function [ColorModels, remasked, NewMask, NewMaskOutline, NewWindows] = update_c
         NewWindows = new_LocalWindows;
     end
     
-    figure(4);
-    imshow(foreground_probs{1});
+%     figure(4);
+%     imshow(foreground_probs{1});
     ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
         'ForegroundProbs', {foreground_probs}, 'SegmentationMasks', {window_masks}, ...
         'GMMs', {window_gmms});
