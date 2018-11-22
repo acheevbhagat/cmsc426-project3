@@ -6,7 +6,6 @@ function [MaskOutline, LocalSamples] = initLocalWindows(IMG,Mask,Num_windows,Win
 MaskOutline = bwperim(Mask,4);
 
 Boundaries = bwboundaries(Mask);
-
 PointsForBoundary = zeros(length(Boundaries));
 AllCoords = 0;
 
