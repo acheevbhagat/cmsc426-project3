@@ -5,9 +5,9 @@
 % Feel free to modify this code as you see fit.
 
 % Some parameters you need to tune:
-WindowWidth = 74;  
-ProbMaskThreshold = 0.4; 
-NumWindows= 30; 
+WindowWidth = 76;  
+ProbMaskThreshold = 0.33; 
+NumWindows= 35; 
 BoundaryWidth = 5;
 
 % Load images:
@@ -30,8 +30,8 @@ for i=1:length(files)
 end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
 % mask = roipoly(images{1});
-% save('mask2.mat', 'mask');
-mask = load('mask.mat');
+% save('mask3.mat', 'mask');
+mask = load('mask3.mat');
 mask = mask.mask;
 imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
@@ -51,10 +51,10 @@ ColorModels = ...
 origColorModel = ColorModels;
 
 % You should set these parameters yourself:
-fcutoff = 0.1;
-SigmaMin = 7;
+fcutoff = 0.90;
+SigmaMin = 40;
 SigmaMax = WindowWidth + 1;
-R = 2;
+R = 3;
 A = (SigmaMax - SigmaMin) / (1 - fcutoff)^R;
 ShapeConfidences = ...
     initShapeConfidences(LocalWindows,ColorModels,...
@@ -90,8 +90,8 @@ for prev=1:(length(files)-1)
     % Show windows before and after optical flow-based warp:
     imshow(images{curr});
     hold on
-    showLocalWindows(warpedLocalWindows,WindowWidth,'r.');
-    showLocalWindows(NewLocalWindows,WindowWidth,'b.');
+    %showLocalWindows(warpedLocalWindows,WindowWidth,'r.');
+    %showLocalWindows(NewLocalWindows,WindowWidth,'b.');
     hold off
     
     %%% UPDATE SHAPE AND COLOR MODELS:
@@ -110,27 +110,28 @@ for prev=1:(length(files)-1)
         warpedMask, ...
         warpedMaskOutline, ...
         WindowWidth, ...
+        NumWindows, ...
         BoundaryWidth, ...
-        ColorModels, ...
+        origColorModel, ...
         ShapeConfidences, ...
         ProbMaskThreshold, ...
         fcutoff, ...
         SigmaMin, ...
         R, ...
-        A, ...
-        origColorModel ...
+        A ...
     );
 
     mask_outline = bwperim(mask,4);
 
-    showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
+    %showColorConfidences(images{1},mask_outline,ColorModels.Confidences,LocalWindows,WindowWidth);
     
     
     
     % Write video frame:
+    figure(1)
     imshow(imoverlay(images{curr}, boundarymask(mask,8), 'red'));
     set(gca,'position',[0 0 1 1],'units','normalized')
-    F = getframe(gcf);
+    F = getframe(figure(1));
     [I,~] = frame2im(F);
     imwrite(I, fullfile(new_fpath, strip(imageNames(curr,:))));
     writeVideo(outputVideo,I);

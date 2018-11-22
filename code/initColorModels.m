@@ -56,9 +56,9 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         end
         
         % Fit GMM models
-        options = statset('MaxIter', 750);
-        F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.0007, 'Options', options);
-        B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.0007, 'Options', options);
+        options = statset('MaxIter', 1000);
+        F_gmm = fitgmdist(F_Lab_vals, 3, 'RegularizationValue', 0.0005, 'Options', options);
+        B_gmm = fitgmdist(B_Lab_vals, 3, 'RegularizationValue', 0.0005, 'Options', options);
         
         % Part 3.3 of project notes
         window_Lab_vals = reshape(window, [size(window, 1)^2 3]);
