@@ -49,10 +49,10 @@ function [NewLocalWindows] = localFlowWarp(WarpedPrevFrame, CurrentFrame, LocalW
             Vy_avg = 0;
         end
         
-%         imshow(imfuse(WarpedPrevFrame, CurrentFrame));
-%         hold on
-%         plot(flow,'DecimationFactor',[5 5],'ScaleFactor',5);
-%         hold off;
+        imshow(imfuse(WarpedPrevFrame, CurrentFrame));
+        hold on
+        plot(flow,'DecimationFactor',[10 10],'ScaleFactor',10);
+        hold off;
         
         new_window_center_pos = window_center' + [Vx_avg Vy_avg];
         NewLocalWindows(window_count, :) = round(new_window_center_pos');

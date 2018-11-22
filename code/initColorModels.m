@@ -86,7 +86,8 @@ function ColorModels = initializeColorModels(IMG, Mask, MaskOutline, LocalWindow
         window_gmms{window_count} = {F_gmm B_gmm};
         window_count = window_count + 1;
     end
-    imshow(foreground_probs{1});
+%     figure(5)
+%     imshow(foreground_probs{1});
     ColorModels = struct('Confidences', {confidences}, 'Distances', {distances}, ...
         'ForegroundProbs', {foreground_probs}, 'SegmentationMasks', {window_masks}, ...
         'GMMs', {window_gmms});

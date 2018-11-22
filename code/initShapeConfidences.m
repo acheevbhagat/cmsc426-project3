@@ -25,6 +25,7 @@ function ShapeConfidences = initShapeConfidences(LocalWindows, ColorModels, Wind
         confidences{window} = f_s;
         sigmas{window} = sigma;
     end
-    
+%     figure(6)
+%     imshow(confidences{1});
     ShapeConfidences = struct('Confidences', {confidences}, 'SegmentationMasks', seg_masks, 'Sigmas', {sigma});
 end
