@@ -17,11 +17,31 @@ function [WarpedFrame, WarpedMask, WarpedMaskOutline, WarpedLocalWindows] = calc
     y_max = max(Windows(:, 2));
     x_min = min(Windows(:, 1));
     x_max = max(Windows(:, 1));
-    
+   
+    if y_min - Width < 0
+        y_min_sub = y_min - 1;
+    else
+        y_min_sub = Width;
+    end
+    if x_min - Width < 0
+        x_min_sub = x_min - 1;
+    else
+        x_min_sub = Width;
+    end
+    if y_max + Width > size(IMG1, 1)
+        y_max_add = size(IMG1, 1) - y_max - 1;
+    else 
+        y_max_add = Width;
+    end
+    if x_max + Width > size(IMG1, 2)
+        x_max_add = size(IMG1, 2) - x_max - 1;
+    else
+        x_max_add = Width;
+    end
     IMG1_gray = single(rgb2gray(IMG1));
-    IMG1_gray = IMG1_gray(y_min - Width:y_max + Width, x_min - Width:x_max + Width);
+    IMG1_gray = IMG1_gray(y_min - y_min_sub:y_max + y_max_add, x_min - x_min_sub:x_max + x_max_add);
     IMG2_gray = single(rgb2gray(IMG2));
-    IMG2_gray = IMG2_gray(y_min - Width:y_max + Width, x_min - Width:x_max + Width);
+    IMG2_gray = IMG2_gray(y_min - y_min_sub:y_max + y_max_add, x_min - x_min_sub:x_max + x_max_add);
     
     [f1, d1] = vl_sift(IMG1_gray);
     [f2, d2] = vl_sift(IMG2_gray);

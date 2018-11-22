@@ -148,9 +148,9 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
         
         % get p_c matrix from applying previous GMMs to current frame's
         % window
-        prev_models = prev_models_GMMs{window_count};
-        prev_F_gmm = prev_models{1};
-        prev_B_gmm = prev_models{2};
+        origGMM = origColorModel.GMMs{window_count};
+        prev_F_gmm = origGMM{1};
+        prev_B_gmm = origGMM{2};
         prev_model_p_c_matrix = get_fore_prob(prev_F_gmm, prev_B_gmm, window_Lab_vals, WindowWidth + 1);
         
         B_Lab_vals = [];
@@ -170,11 +170,9 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
             end
         end
         
-        origGMM = origColorModel.GMMs{window_count};
-        new_F_gmm = origGMM{1};
-        new_B_gmm = origGMM{2};
         
-        %{
+        
+        
         
         % Fit GMM models
         options = statset('MaxIter', 700);
@@ -192,7 +190,7 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
             new_B_gmm = prev_B_gmm;
         end
         
-        %}
+        
         
         % Combine foreground and background probabilities
         new_model_p_c_matrix = get_fore_prob(new_F_gmm, new_B_gmm, window_Lab_vals, WindowWidth + 1);
@@ -206,7 +204,7 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
             % If the difference is greater than some percentage, detect an
             % error and ask the user to create a new mask for use by the
             % color model
-            if (1 - (num_F_pixels_new_GMM / num_F_pixels_prev_GMM)) > 0.3
+            if (1 - (num_F_pixels_prev_GMM / num_F_pixels_new_GMM)) > 0.75
                 recalced = true;
                 break;
             else
@@ -215,12 +213,11 @@ function ColorModels = update_color_models(CurrentFrame, WarpedMask, WarpedMaskO
                 for row = 1:size(window, 1)
                     for col = 1:size(window, 2)
                         weight = exp(-pix_dists_to_boundary_window(row, col)^2 / (WindowWidth / 2)^2);
-                        p_c = prev_model_p_c_matrix(row, col);
+                        p_c = new_model_p_c_matrix(row, col);
                         confidence_numer = confidence_numer + abs(window_mask(row, col) - p_c) * weight;
                         confidence_denom = confidence_denom + weight;
                     end
                 end
-
                 color_model_confidence = 1 - (confidence_numer / confidence_denom);
                 p_c_matrix = new_model_p_c_matrix;
                 F_gmm = new_F_gmm;

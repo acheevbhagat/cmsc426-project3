@@ -31,7 +31,7 @@ end
 % NOTE: to save time during development, you should save/load your mask rather than use ROIPoly every time.
 %mask = roipoly(images{1});
 %save('mask4.mat', 'mask');
-mask = load('mask.mat');
+mask = load('mask4.mat');
 mask = mask.mask;
 imshow(imoverlay(images{1}, boundarymask(mask,8), 'red'));
 set(gca,'position',[0 0 1 1],'units','normalized')
